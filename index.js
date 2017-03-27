@@ -63,6 +63,7 @@ function Slideout(options) {
 
   // Sets default values
   this._startOffsetX = 0;
+  this._startOffsetY = 0;
   this._currentOffsetX = 0;
   this._opening = false;
   this._moved = false;
@@ -219,6 +220,7 @@ Slideout.prototype._initTouchEvents = function() {
     self._moved = false;
     self._opening = false;
     self._startOffsetX = eve.touches[0].pageX;
+    self._startOffsetY = eve.touches[0].pageY;
     self._preventOpen = (!self._touch || (!self.isOpen() && self.menu.clientWidth !== 0));
   };
 
@@ -230,6 +232,7 @@ Slideout.prototype._initTouchEvents = function() {
   this._onTouchCancelFn = function() {
     self._moved = false;
     self._opening = false;
+    self._preventOpen = false;
   };
 
   this.panel.addEventListener('touchcancel', this._onTouchCancelFn);
@@ -242,6 +245,7 @@ Slideout.prototype._initTouchEvents = function() {
       self.emit('translateend');
       (self._opening && Math.abs(self._currentOffsetX) > self._tolerance) ? self.open() : self.close();
     }
+    self._preventOpen = false;
     self._moved = false;
   };
 
@@ -261,6 +265,7 @@ Slideout.prototype._initTouchEvents = function() {
     }
 
     var dif_x = eve.touches[0].clientX - self._startOffsetX;
+    var dif_y = eve.touches[0].clientY - self._startOffsetY;
     var translateX = self._currentOffsetX = dif_x;
 
     if (Math.abs(translateX) > self._padding) {
@@ -293,6 +298,9 @@ Slideout.prototype._initTouchEvents = function() {
       self.panel.style[prefix + 'transform'] = self.panel.style.transform = 'translateX(' + translateX + 'px)';
       self.emit('translate', translateX);
       self._moved = true;
+    } else if (Math.abs(dif_y) > 40 && !self._opening) {
+      self._preventOpen = true;
+      return;
     }
 
   };
